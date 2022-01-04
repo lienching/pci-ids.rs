@@ -1,0 +1,28 @@
+name: check for updates to pci.ids
+on:
+  schedule:
+    - cron: '0 12 * * *'
+
+jobs:
+  check-usbids:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: try to update pci.ids
+        run: |
+          curl -o src/pci.ids https://pci-ids.ucw.cz/v2.2/pci.ids
+
+      - name: create PR
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: "[BOT] update pci.ids"
+          branch: update-pciids
+          branch-suffix: timestamp
+          title: "[BOT] update pci.ids"
+          body: |
+            This is an automated pull request, updating `pci.ids` after a detected change.
+
+            Please review manually before merging.
+          assignees: "lienching"
+          reviewers: "lienching"
