@@ -121,7 +121,7 @@ impl Device {
 
 /// Represents an subsystem to a PCI device in the PCI database.
 ///
-/// Every subsystem has subvendor and subdevice ID 
+/// Every subsystem has subvendor and subdevice ID
 /// and a pretty name.
 ///
 /// **NOTE**: The PCI database is not a canonical or authoritative source
