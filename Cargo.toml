@@ -1,7 +1,7 @@
 [package]
 name = "pci-ids"
 description = "Rust wrappers for the PCI ID Repository"
-license = "MIT and BSD-3-Clause"
+license = "MIT"
 version = "0.2.3"
 authors = ["William Woodruff <william@yossarian.net>", "Charles Lien <lienching31240@gmail.com>"]
 edition = "2018"
