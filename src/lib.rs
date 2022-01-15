@@ -68,7 +68,7 @@ impl Vendor {
 /// Represents a single device in the PCI database.
 ///
 /// Every device has a corresponding vendor, a device ID, a pretty name,
-/// and a list of associated [`Interface`]s.
+/// and a list of associated [`SubSystem`]s.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Device {
     vendor_id: u16,
@@ -110,22 +110,22 @@ impl Device {
         self.name
     }
 
-    /// Returns an iterator over the device's interfaces.
+    /// Returns an iterator over the device's subsystem.
     ///
-    /// **NOTE**: The PCI database does not include interface information for
+    /// **NOTE**: The PCI database does not include subsystem information for
     /// most devices. This list is not authoritative.
     pub fn subsystem(&self) -> impl Iterator<Item = &'static SubSystem> {
         self.subsystem.iter()
     }
 }
 
-/// Represents an interface to a PCI device in the PCI database.
+/// Represents an subsystem to a PCI device in the PCI database.
 ///
-/// Every interface has an interface ID (which is an index on the device)
+/// Every subsystem has subvendor and subdevice ID 
 /// and a pretty name.
 ///
 /// **NOTE**: The PCI database is not a canonical or authoritative source
-/// of interface information for devices. Users who wish to discover interfaces
+/// of subsystem information for devices. Users who wish to discover subsystem
 /// on their PCI devices should query those devices directly.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SubSystem {

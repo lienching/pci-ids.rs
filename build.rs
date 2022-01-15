@@ -34,7 +34,7 @@ struct CgSubSystem {
 #[allow(clippy::redundant_field_names)]
 fn main() {
     let out_dir = env::var_os("OUT_DIR").unwrap();
-    let src_path = Path::new("src/pci.ids");
+    let src_path = Path::new("pciids/pci.ids");
     let dest_path = Path::new(&out_dir).join("pci_ids.cg.rs");
     let input = {
         let f = fs::File::open(src_path).unwrap();
