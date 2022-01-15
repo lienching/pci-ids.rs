@@ -22,6 +22,7 @@
 //! See the individual documentation for each structure for more details.
 //!
 
+#![no_std]
 #![warn(missing_docs)]
 
 // Codegen: introduces PCI_IDS, a phf::Map<u16, Vendor>.
