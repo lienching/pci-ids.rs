@@ -26,7 +26,7 @@ struct CgDevice {
 }
 
 struct CgSubSystem {
-    subvender: u16,
+    subvendor: u16,
     subdevice: u16,
     name: String,
 }
@@ -78,7 +78,7 @@ fn main() {
                 subsystem: vec![],
             });
             curr_device_id = id;
-        } else if let Ok((name, (subvender, subdevice))) = parser::subsystem(&line) {
+        } else if let Ok((name, (subvendor, subdevice))) = parser::subsystem(&line) {
             // We should always have a current vendor; failure here indicates a malformed input.
             // Similarly, our current vendor should always have a device corresponding
             // to the current device id.
@@ -90,7 +90,7 @@ fn main() {
                 .unwrap();
 
             curr_device.subsystem.push(CgSubSystem {
-                subvender,
+                subvendor,
                 subdevice,
                 name: name.into(),
             });
@@ -141,9 +141,9 @@ mod parser {
     }
 
     pub fn subsystem(input: &str) -> IResult<&str, (u16, u16)> {
-        let subvender = id(4, u16::from_str_radix);
+        let subvendor = id(4, u16::from_str_radix);
         let subdevice = id(4, u16::from_str_radix);
-        let id = separated_pair(subvender, tag(" "), subdevice);
+        let id = separated_pair(subvendor, tag(" "), subdevice);
         delimited(tag("\t\t"), id, tag("  "))(input)
     }
 }
@@ -184,12 +184,12 @@ impl quote::ToTokens for CgVendor {
 impl quote::ToTokens for CgSubSystem {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let CgSubSystem {
-            subvender,
+            subvendor,
             subdevice,
             name,
         } = self;
         tokens.extend(quote! {
-            SubSystem { subvender: #subvender, subdevice: #subdevice, name: #name }
+            SubSystem { subvendor: #subvendor, subdevice: #subdevice, name: #name }
         });
     }
 }
