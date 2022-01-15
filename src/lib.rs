@@ -128,15 +128,15 @@ impl Device {
 /// on their PCI devices should query those devices directly.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SubSystem {
-    subvender: u16,
+    subvendor: u16,
     subdevice: u16,
     name: &'static str,
 }
 
 impl SubSystem {
     /// Returns the subsystem's ID.
-    pub fn subvender(&self) -> u16 {
-        self.subvender
+    pub fn subvendor(&self) -> u16 {
+        self.subvendor
     }
 
     /// Returns the subsystem's subdevice.
