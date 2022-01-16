@@ -11,8 +11,6 @@ use quote::quote;
  * of context needed for pairing nested entities (e.g. devices) with their parents (e.g. vendors).
  */
 
-type VMap = Map<u16>;
-
 struct CgVendor {
     id: u16,
     name: String,
@@ -49,7 +47,7 @@ fn main() {
     let mut curr_vendor: Option<CgVendor> = None;
     let mut curr_device_id = 0u16;
 
-    let mut map = emit_prologue(&mut output);
+    let mut map = Map::new();
 
     for line in input.lines() {
         let line = line.unwrap();
@@ -60,7 +58,7 @@ fn main() {
         if let Ok((name, id)) = parser::vendor(&line) {
             // If there was a previous vendor, emit it.
             if let Some(vendor) = curr_vendor.take() {
-                emit_vendor(&mut map, &vendor);
+                map.entry(vendor.id, &quote!(#vendor).to_string());
             }
 
             // Set our new vendor as the current vendor.
@@ -101,10 +99,15 @@ fn main() {
         }
     }
     if let Some(vendor) = curr_vendor.take() {
-        emit_vendor(&mut map, &vendor);
+        map.entry(vendor.id, &quote!(#vendor).to_string());
     }
 
-    emit_epilogue(&mut output, map);
+    writeln!(
+        output,
+        "static PCI_IDS: phf::Map<u16, Vendor> = {};",
+        map.build()
+    )
+    .unwrap();
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=pciids/pci.ids");
@@ -146,20 +149,6 @@ mod parser {
         let id = separated_pair(subvendor, tag(" "), subdevice);
         delimited(tag("\t\t"), id, tag("  "))(input)
     }
-}
-
-fn emit_prologue(output: &mut impl Write) -> VMap {
-    writeln!(output, "static PCI_IDS: phf::Map<u16, Vendor> = ").unwrap();
-
-    Map::new()
-}
-
-fn emit_vendor(map: &mut VMap, vendor: &CgVendor) {
-    map.entry(vendor.id, &quote!(#vendor).to_string());
-}
-
-fn emit_epilogue(output: &mut impl Write, map: VMap) {
-    writeln!(output, "{};", map.build()).unwrap();
 }
 
 impl quote::ToTokens for CgVendor {
