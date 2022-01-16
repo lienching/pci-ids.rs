@@ -25,7 +25,7 @@
 #![no_std]
 #![warn(missing_docs)]
 
-// Codegen: introduces PCI_IDS, a phf::Map<u16, Vendor>.
+// Codegen: introduces VENDORS, a phf::Map<u16, Vendor>.
 include!(concat!(env!("OUT_DIR"), "/pci_ids.cg.rs"));
 
 /// An abstraction for iterating over all vendors in the PCI database.
@@ -33,7 +33,7 @@ pub struct Vendors;
 impl Vendors {
     /// Returns an iterator over all vendors in the PCI database.
     pub fn iter() -> impl Iterator<Item = &'static Vendor> {
-        PCI_IDS.values()
+        VENDORS.values()
     }
 }
 
@@ -90,7 +90,7 @@ impl Device {
     ///
     /// Looking up a vendor by device is cheap (`O(1)`).
     pub fn vendor(&self) -> &'static Vendor {
-        PCI_IDS.get(&self.vendor_id).unwrap()
+        VENDORS.get(&self.vendor_id).unwrap()
     }
 
     /// Returns a tuple of (vendor id, device/"product" id) for this device.
@@ -162,7 +162,7 @@ pub trait FromId<T> {
 
 impl FromId<u16> for Vendor {
     fn from_id(id: u16) -> Option<&'static Self> {
-        PCI_IDS.get(&id)
+        VENDORS.get(&id)
     }
 }
 

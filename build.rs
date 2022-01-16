@@ -47,7 +47,7 @@ fn main() {
     let mut curr_vendor: Option<CgVendor> = None;
     let mut curr_device_id = 0u16;
 
-    let mut map = Map::new();
+    let mut vendors = Map::new();
 
     for line in input.lines() {
         let line = line.unwrap();
@@ -58,7 +58,7 @@ fn main() {
         if let Ok((name, id)) = parser::vendor(&line) {
             // If there was a previous vendor, emit it.
             if let Some(vendor) = curr_vendor.take() {
-                map.entry(vendor.id, &quote!(#vendor).to_string());
+                vendors.entry(vendor.id, &quote!(#vendor).to_string());
             }
 
             // Set our new vendor as the current vendor.
@@ -99,13 +99,13 @@ fn main() {
         }
     }
     if let Some(vendor) = curr_vendor.take() {
-        map.entry(vendor.id, &quote!(#vendor).to_string());
+        vendors.entry(vendor.id, &quote!(#vendor).to_string());
     }
 
     writeln!(
         output,
-        "static PCI_IDS: phf::Map<u16, Vendor> = {};",
-        map.build()
+        "static VENDORS: phf::Map<u16, Vendor> = {};",
+        vendors.build()
     )
     .unwrap();
 
