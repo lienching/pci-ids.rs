@@ -107,7 +107,7 @@ fn main() {
     emit_epilogue(&mut output, map);
 
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=src/usb.ids");
+    println!("cargo:rerun-if-changed=pciids/pci.ids");
 }
 
 mod parser {
