@@ -74,7 +74,7 @@ pub struct Device {
     vendor_id: u16,
     id: u16,
     name: &'static str,
-    subsystem: &'static [SubSystem],
+    subsystems: &'static [SubSystem],
 }
 
 impl Device {
@@ -110,12 +110,12 @@ impl Device {
         self.name
     }
 
-    /// Returns an iterator over the device's subsystem.
+    /// Returns an iterator over the device's subsystems.
     ///
     /// **NOTE**: The PCI database does not include subsystem information for
     /// most devices. This list is not authoritative.
-    pub fn subsystem(&self) -> impl Iterator<Item = &'static SubSystem> {
-        self.subsystem.iter()
+    pub fn subsystems(&self) -> impl Iterator<Item = &'static SubSystem> {
+        self.subsystems.iter()
     }
 }
 
@@ -125,7 +125,7 @@ impl Device {
 /// and a pretty name.
 ///
 /// **NOTE**: The PCI database is not a canonical or authoritative source
-/// of subsystem information for devices. Users who wish to discover subsystem
+/// of subsystems information for devices. Users who wish to discover subsystems
 /// on their PCI devices should query those devices directly.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SubSystem {
