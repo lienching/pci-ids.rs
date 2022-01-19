@@ -6,7 +6,7 @@ use std::path::Path;
 use phf_codegen::Map;
 use quote::quote;
 
-/* This build script contains a "parser" for the USB ID database.
+/* This build script contains a "parser" for the PCI ID database.
  * "Parser" is in scare-quotes because it's really a line matcher with a small amount
  * of context needed for pairing nested entities (e.g. devices) with their parents (e.g. vendors).
  */
@@ -107,7 +107,7 @@ fn main() {
     emit_epilogue(&mut output, map);
 
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=src/usb.ids");
+    println!("cargo:rerun-if-changed=pciids/pci.ids");
 }
 
 mod parser {
