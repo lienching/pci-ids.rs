@@ -171,7 +171,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_id() {
+    fn test_vendor_from_id() {
         let vendor = Vendor::from_id(0x14c3).unwrap();
 
         assert_eq!(vendor.name(), "MEDIATEK Corp.");
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_vid_pid() {
+    fn test_device_from_vid_pid() {
         let device = Device::from_vid_pid(0x16ae, 0x000a).unwrap();
 
         assert_eq!(device.name(), "SafeXcel 1841");
