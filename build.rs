@@ -29,6 +29,23 @@ struct CgSubSystem {
     name: String,
 }
 
+struct CgClass {
+    id: u8,
+    name: String,
+    subclasses: Vec<CgSubclass>,
+}
+
+struct CgSubclass {
+    id: u8,
+    name: String,
+    prog_ifs: Vec<CgProgIf>,
+}
+
+pub struct CgProgIf {
+    id: u8,
+    name: String,
+}
+
 #[allow(clippy::redundant_field_names)]
 fn main() {
     let out_dir = env::var_os("OUT_DIR").unwrap();
@@ -46,8 +63,11 @@ fn main() {
     // Parser state.
     let mut curr_vendor: Option<CgVendor> = None;
     let mut curr_device_id = 0u16;
+    let mut curr_class: Option<CgClass> = None;
+    let mut curr_subclass_id = 0u8;
 
     let mut vendors = Map::new();
+    let mut classes = Map::new();
 
     for line in input.lines() {
         let line = line.unwrap();
@@ -92,6 +112,42 @@ fn main() {
                 subdevice,
                 name: name.into(),
             });
+        } else if let Ok((name, id)) = parser::class(&line) {
+            // If there was a previous class, emit it.
+            if let Some(class) = curr_class.take() {
+                classes.entry(class.id, &quote!(#class).to_string());
+            }
+
+            // Set our new class as the current class.
+            curr_class = Some(CgClass {
+                id,
+                name: name.into(),
+                subclasses: vec![],
+            });
+        } else if let Ok((name, id)) = parser::subclass(&line) {
+            // We should always have a current class; failure here indicates a malformed input.
+            let curr_class = curr_class.as_mut().unwrap();
+            curr_class.subclasses.push(CgSubclass {
+                id,
+                name: name.into(),
+                prog_ifs: vec![],
+            });
+            curr_subclass_id = id;
+        } else if let Ok((name, id)) = parser::prog_if(&line) {
+            // We should always have a current class; failure here indicates a malformed input.
+            // Similarly, our current class should always have a subclass corresponding
+            // to the current subclass id.
+            let curr_class = curr_class.as_mut().unwrap();
+            let curr_subclass = curr_class
+                .subclasses
+                .iter_mut()
+                .find(|d| d.id == curr_subclass_id)
+                .unwrap();
+
+            curr_subclass.prog_ifs.push(CgProgIf {
+                id,
+                name: name.into(),
+            });
         } else {
             // TODO: Lots of other things that could be parsed out:
             // Language, dialect, country code, HID types, ...
@@ -101,11 +157,21 @@ fn main() {
     if let Some(vendor) = curr_vendor.take() {
         vendors.entry(vendor.id, &quote!(#vendor).to_string());
     }
+    if let Some(class) = curr_class.take() {
+        classes.entry(class.id, &quote!(#class).to_string());
+    }
 
     writeln!(
         output,
         "static VENDORS: phf::Map<u16, Vendor> = {};",
         vendors.build()
+    )
+    .unwrap();
+
+    writeln!(
+        output,
+        "static CLASSES: phf::Map<u8, Class> = {};",
+        classes.build()
     )
     .unwrap();
 
@@ -149,6 +215,21 @@ mod parser {
         let id = separated_pair(subvendor, tag(" "), subdevice);
         delimited(tag("\t\t"), id, tag("  "))(input)
     }
+
+    pub fn class(input: &str) -> IResult<&str, u8> {
+        let id = id(2, u8::from_str_radix);
+        delimited(tag("C "), id, tag("  "))(input)
+    }
+
+    pub fn subclass(input: &str) -> IResult<&str, u8> {
+        let id = id(2, u8::from_str_radix);
+        delimited(tab, id, tag("  "))(input)
+    }
+
+    pub fn prog_if(input: &str) -> IResult<&str, u8> {
+        let id = id(2, u8::from_str_radix);
+        delimited(tag("\t\t"), id, tag("  "))(input)
+    }
 }
 
 impl quote::ToTokens for CgVendor {
@@ -179,6 +260,34 @@ impl quote::ToTokens for CgSubSystem {
         } = self;
         tokens.extend(quote! {
             SubSystem { subvendor: #subvendor, subdevice: #subdevice, name: #name }
+        });
+    }
+}
+
+impl quote::ToTokens for CgClass {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let CgClass {
+            id: class_id,
+            name,
+            subclasses,
+        } = self;
+
+        let subclasses = subclasses.iter().map(|CgSubclass { id, name, prog_ifs }| {
+            quote! {
+                Subclass { class_id: #class_id, id: #id, name: #name, prog_ifs: &[#(#prog_ifs),*] }
+            }
+        });
+        tokens.extend(quote! {
+            Class { id: #class_id, name: #name, subclasses: &[#(#subclasses),*] }
+        })
+    }
+}
+
+impl quote::ToTokens for CgProgIf {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let CgProgIf { id, name } = self;
+        tokens.extend(quote! {
+            ProgIf { id: #id, name: #name }
         });
     }
 }

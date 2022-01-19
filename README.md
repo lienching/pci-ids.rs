@@ -25,3 +25,15 @@ for vendor in Vendors::iter() {
     }
 }
 ```
+
+Iterating over all known subclasses:
+
+```rust
+use pci_ids::Classes;
+
+for class in Classes::iter() {
+    for subclass in class.subclasses() {
+        println!("class: {}, subclass: {}", class.name(), subclass.name());
+    }
+}
+```

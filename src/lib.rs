@@ -19,6 +19,18 @@
 //! }
 //! ```
 //!
+//! Iterating over all known subclasses:
+//!
+//! ```rust
+//! use pci_ids::Classes;
+//!
+//! for class in Classes::iter() {
+//!     for subclass in class.subclasses() {
+//!         println!("class: {}, subclass: {}", class.name(), subclass.name());
+//!     }
+//! }
+//! ```
+//!
 //! See the individual documentation for each structure for more details.
 //!
 
@@ -151,10 +163,121 @@ impl SubSystem {
     }
 }
 
+/// An abstraction for iterating over all classes in the PCI database.
+pub struct Classes;
+
+impl Classes {
+    /// Returns an iterator over all classes in the PCI database.
+    pub fn iter() -> impl Iterator<Item = &'static Class> {
+        CLASSES.values()
+    }
+}
+
+/// Represents a PCI device class in the PCI database.
+///
+/// Every device class has a class ID, a pretty name, and a list of associated [`Subclass`]es.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Class {
+    id: u8,
+    name: &'static str,
+    subclasses: &'static [Subclass],
+}
+
+impl Class {
+    /// Returns the class' ID.
+    pub fn id(&self) -> u8 {
+        self.id
+    }
+
+    /// Returns the class' name.
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+
+    /// Returns an iterator over the class' devices.
+    pub fn subclasses(&self) -> impl Iterator<Item = &'static Subclass> {
+        self.subclasses.iter()
+    }
+}
+
+/// Represents a PCI device subclass in the PCI database.
+///
+/// Every subclass has a corresponding class, a subclass id, a pretty name, and a list of associated [`ProgIf`]s.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Subclass {
+    class_id: u8,
+    id: u8,
+    name: &'static str,
+    prog_ifs: &'static [ProgIf],
+}
+
+impl Subclass {
+    /// Returns the [`Subclass`] corresponding to the given class and subclass IDs, or `None` if no such device exists in the DB.
+    pub fn from_cid_sid(cid: u8, sid: u8) -> Option<&'static Self> {
+        let class = Class::from_id(cid);
+
+        class.and_then(|c| c.subclasses().find(|s| s.id == sid))
+    }
+
+    /// Returns the [`Class`] that this subclass belongs to.
+    ///
+    /// Looking up a class by subclass is cheap (`O(1)`).
+    pub fn class(&self) -> &'static Class {
+        CLASSES.get(&self.class_id).unwrap()
+    }
+
+    /// Returns a tuple of (class ID, subclass ID) for this subclass.
+    ///
+    /// This is conveniont for interactions with other PCI libraries.
+    pub fn as_cid_sid(&self) -> (u8, u8) {
+        (self.class_id, self.id)
+    }
+
+    /// Returns the subclass' ID.
+    pub fn id(&self) -> u8 {
+        self.id
+    }
+
+    /// Returns the subclass' name.
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+
+    /// Returns an iterator over the subclass' programming interfaces.
+    ///
+    /// **NOTE**: The PCI database does not include programming interface information for most devices.
+    /// This list is not authoritative.
+    pub fn prog_ifs(&self) -> impl Iterator<Item = &'static ProgIf> {
+        self.prog_ifs.iter()
+    }
+}
+
+/// Represents a programming interface to a PCI subclass in the PCI database.
+///
+/// Every programming interface has an ID and a pretty name.
+///
+/// **NOTE**: The PCI database is not a canonical or authoritative source of programming interface information for subclasses.
+/// Users who wish to discover programming interfaces on their PCI devices should query those devices directly.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ProgIf {
+    id: u8,
+    name: &'static str,
+}
+
+impl ProgIf {
+    /// Returns the programming interface's ID.
+    pub fn id(&self) -> u8 {
+        self.id
+    }
+
+    /// Returns the programming interface's name.
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+}
+
 /// A convenience trait for retrieving a top-level entity (like a [`Vendor`]) from the PCI
 /// database by its unique ID.
-// NOTE(ww): This trait will be generally useful once we support other top-level
-// entities in `PCI.ids` (like language, country code, HID codes, etc).
 pub trait FromId<T> {
     /// Returns the entity corresponding to `id`, or `None` if none exists.
     fn from_id(id: T) -> Option<&'static Self>;
@@ -163,6 +286,12 @@ pub trait FromId<T> {
 impl FromId<u16> for Vendor {
     fn from_id(id: u16) -> Option<&'static Self> {
         VENDORS.get(&id)
+    }
+}
+
+impl FromId<u8> for Class {
+    fn from_id(id: u8) -> Option<&'static Self> {
+        CLASSES.get(&id)
     }
 }
 
@@ -202,5 +331,39 @@ mod tests {
         let device2 = Device::from_vid_pid(vid, pid).unwrap();
 
         assert_eq!(device, device2);
+    }
+
+    #[test]
+    fn test_class_from_id() {
+        let class = Class::from_id(0x08).unwrap();
+
+        assert_eq!(class.name(), "Generic system peripheral");
+        assert_eq!(class.id(), 0x08);
+    }
+
+    #[test]
+    fn test_class_subclasses() {
+        let class = Class::from_id(0x01).unwrap();
+
+        for subclass in class.subclasses() {
+            assert_eq!(subclass.class(), class);
+            assert!(!subclass.name().is_empty());
+        }
+    }
+
+    #[test]
+    fn test_subclass_from_cid_sid() {
+        let subclass = Subclass::from_cid_sid(0x07, 0x00).unwrap();
+
+        assert_eq!(subclass.name(), "Serial controller");
+
+        let (cid, sid) = subclass.as_cid_sid();
+
+        assert_eq!(cid, subclass.class().id());
+        assert_eq!(sid, subclass.id());
+
+        let subclass2 = Subclass::from_cid_sid(cid, sid).unwrap();
+
+        assert_eq!(subclass, subclass2);
     }
 }
