@@ -93,7 +93,7 @@ impl Device {
         PCI_IDS.get(&self.vendor_id).unwrap()
     }
 
-    /// Returns a tuple of (vendor id, device/"product" id) for this device.
+    /// Returns a tuple of (vendor ID, device/"product" ID) for this device.
     ///
     /// This is convenient for interactions with other PCI libraries.
     pub fn as_vid_pid(&self) -> (u16, u16) {
