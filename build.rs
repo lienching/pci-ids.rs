@@ -96,7 +96,7 @@ fn main() {
                 subsystems: vec![],
             });
             curr_device_id = id;
-        } else if let Ok((name, (subvendor, subdevice))) = parser::subsystem(&line) {
+        } else if let Ok((name, (subvendor, subdevice))) = parser::subsystems(&line) {
             // We should always have a current vendor; failure here indicates a malformed input.
             // Similarly, our current vendor should always have a device corresponding
             // to the current device id.
@@ -209,7 +209,7 @@ mod parser {
         delimited(tab, id, tag("  "))(input)
     }
 
-    pub fn subsystem(input: &str) -> IResult<&str, (u16, u16)> {
+    pub fn subsystems(input: &str) -> IResult<&str, (u16, u16)> {
         let subvendor = id(4, u16::from_str_radix);
         let subdevice = id(4, u16::from_str_radix);
         let id = separated_pair(subvendor, tag(" "), subdevice);
@@ -240,9 +240,9 @@ impl quote::ToTokens for CgVendor {
             devices,
         } = self;
 
-        let devices = devices.iter().map(|CgDevice { id, name, subsystem }| {
+        let devices = devices.iter().map(|CgDevice { id, name, subsystems }| {
             quote! {
-                Device { vendor_id: #vendor_id, id: #id, name: #name, subsystem: &[#(#subsystem),*] }
+                Device { vendor_id: #vendor_id, id: #id, name: #name, subsystems: &[#(#subsystems),*] }
             }
         });
         tokens.extend(quote! {
