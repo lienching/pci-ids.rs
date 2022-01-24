@@ -22,7 +22,7 @@ struct CgVendor {
 struct CgDevice {
     id: u16,
     name: String,
-    subsystem: Vec<CgSubSystem>,
+    subsystems: Vec<CgSubSystem>,
 }
 
 struct CgSubSystem {
@@ -75,7 +75,7 @@ fn main() {
             curr_vendor.devices.push(CgDevice {
                 id,
                 name: name.into(),
-                subsystem: vec![],
+                subsystems: vec![],
             });
             curr_device_id = id;
         } else if let Ok((name, (subvendor, subdevice))) = parser::subsystem(&line) {
@@ -89,7 +89,7 @@ fn main() {
                 .find(|d| d.id == curr_device_id)
                 .unwrap();
 
-            curr_device.subsystem.push(CgSubSystem {
+            curr_device.subsystems.push(CgSubSystem {
                 subvendor,
                 subdevice,
                 name: name.into(),
