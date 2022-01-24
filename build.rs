@@ -171,7 +171,7 @@ impl quote::ToTokens for CgVendor {
         } = self;
 
         let devices = devices.iter().map(|CgDevice { id, name, subsystem }| {
-            quote!{
+            quote! {
                 Device { vendor_id: #vendor_id, id: #id, name: #name, subsystem: &[#(#subsystem),*] }
             }
         });
