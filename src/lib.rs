@@ -53,7 +53,7 @@ impl Vendors {
 ///
 /// Every device vendor has a vendor ID, a pretty name, and a
 /// list of associated [`Device`]s.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Vendor {
     id: u16,
     name: &'static str,
@@ -81,7 +81,7 @@ impl Vendor {
 ///
 /// Every device has a corresponding vendor, a device ID, a pretty name,
 /// and a list of associated [`SubSystem`]s.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Device {
     vendor_id: u16,
     id: u16,
@@ -139,7 +139,7 @@ impl Device {
 /// **NOTE**: The PCI database is not a canonical or authoritative source
 /// of subsystems information for devices. Users who wish to discover subsystems
 /// on their PCI devices should query those devices directly.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SubSystem {
     subvendor: u16,
     subdevice: u16,
@@ -176,7 +176,7 @@ impl Classes {
 /// Represents a PCI device class in the PCI database.
 ///
 /// Every device class has a class ID, a pretty name, and a list of associated [`Subclass`]es.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Class {
     id: u8,
     name: &'static str,
@@ -203,7 +203,7 @@ impl Class {
 /// Represents a PCI device subclass in the PCI database.
 ///
 /// Every subclass has a corresponding class, a subclass id, a pretty name, and a list of associated [`ProgIf`]s.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Subclass {
     class_id: u8,
     id: u8,
@@ -258,7 +258,7 @@ impl Subclass {
 ///
 /// **NOTE**: The PCI database is not a canonical or authoritative source of programming interface information for subclasses.
 /// Users who wish to discover programming interfaces on their PCI devices should query those devices directly.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ProgIf {
     id: u8,
     name: &'static str,
