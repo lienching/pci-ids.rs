@@ -49,6 +49,7 @@ pub struct CgProgIf {
 #[allow(clippy::redundant_field_names)]
 fn main() {
     let out_dir = env::var_os("OUT_DIR").unwrap();
+    update_ids();
     let src_path = Path::new("pciids/pci.ids");
     let dest_path = Path::new(&out_dir).join("pci_ids.cg.rs");
     let input = {
@@ -290,4 +291,18 @@ impl quote::ToTokens for CgProgIf {
             ProgIf { id: #id, name: #name }
         });
     }
+}
+
+
+fn update_ids() {
+    match std::fs::remove_file("pciids/pci.ids") {
+        Ok(_) => {},
+        Err(e) => {println!("Failed to delete file, assuming it doesn't exist... {:?}", e)},
+    }
+    let mut _wget = std::process::Command::new("curl")
+        .arg("https://pci-ids.ucw.cz/v2.2/pci.ids")
+        .arg("--output")
+        .arg("pciids/pci.ids")
+        .spawn().expect("Failed to fetch data");
+    _wget.wait().expect("Error fetching data");
 }
