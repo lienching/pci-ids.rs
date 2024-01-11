@@ -299,10 +299,10 @@ fn update_ids() {
         Ok(_) => {},
         Err(e) => {println!("Failed to delete file, assuming it doesn't exist... {:?}", e)},
     }
-    let mut _wget = std::process::Command::new("curl")
+    std::process::Command::new("curl")
         .arg("https://pci-ids.ucw.cz/v2.2/pci.ids")
         .arg("--output")
         .arg("pciids/pci.ids")
-        .spawn().expect("Failed to fetch data");
-    _wget.wait().expect("Error fetching data");
+        .spawn().expect("Failed to fetch data")
+        .wait().expect("Error fetching data");
 }
