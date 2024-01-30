@@ -293,16 +293,22 @@ impl quote::ToTokens for CgProgIf {
     }
 }
 
-
 fn update_ids() {
     match std::fs::remove_file("pciids/pci.ids") {
-        Ok(_) => {},
-        Err(e) => {println!("Failed to delete file, assuming it doesn't exist... {:?}", e)},
+        Ok(_) => {}
+        Err(e) => {
+            println!(
+                "Failed to delete file, assuming it doesn't exist... {:?}",
+                e
+            )
+        }
     }
     std::process::Command::new("curl")
         .arg("https://pci-ids.ucw.cz/v2.2/pci.ids")
         .arg("--output")
         .arg("pciids/pci.ids")
-        .spawn().expect("Failed to fetch data")
-        .wait().expect("Error fetching data");
+        .spawn()
+        .expect("Failed to fetch data")
+        .wait()
+        .expect("Error fetching data");
 }
