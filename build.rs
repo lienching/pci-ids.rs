@@ -49,7 +49,9 @@ pub struct CgProgIf {
 #[allow(clippy::redundant_field_names)]
 fn main() {
     let out_dir = env::var_os("OUT_DIR").unwrap();
-    update_ids();
+    if update_ids().is_err() {
+        println!("cargo:warning=Failed fetching pci ids, do you have internet connection ?... Using cached version");
+    }
     let src_path = Path::new("pciids/pci.ids");
     let dest_path = Path::new(&out_dir).join("pci_ids.cg.rs");
     let input = {
@@ -293,22 +295,19 @@ impl quote::ToTokens for CgProgIf {
     }
 }
 
-fn update_ids() {
-    match std::fs::remove_file("pciids/pci.ids") {
-        Ok(_) => {}
-        Err(e) => {
-            println!(
-                "Failed to delete file, assuming it doesn't exist... {:?}",
-                e
-            )
-        }
-    }
-    std::process::Command::new("curl")
-        .arg("https://pci-ids.ucw.cz/v2.2/pci.ids")
+fn update_ids() -> Result<(), std::io::Error> {
+    let status = std::process::Command::new("curl")
+        .arg("https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids")
         .arg("--output")
         .arg("pciids/pci.ids")
-        .spawn()
-        .expect("Failed to fetch data")
-        .wait()
-        .expect("Error fetching data");
+        .spawn()?
+        .wait()?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Error fetching pci data",
+        ))
+    }
 }
