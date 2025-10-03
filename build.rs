@@ -298,6 +298,7 @@ impl quote::ToTokens for CgProgIf {
 fn update_ids() -> Result<(), std::io::Error> {
     let status = std::process::Command::new("curl")
         .arg("https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids")
+        .arg("--create-dirs")
         .arg("--output")
         .arg("pciids/pci.ids")
         .spawn()?
